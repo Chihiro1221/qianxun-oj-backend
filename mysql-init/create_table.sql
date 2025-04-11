@@ -5,11 +5,11 @@
 
 -- 创建库
 create
-database if not exists yuoj;
+database if not exists qianxun;
 
 -- 切换库
 use
-yuoj;
+qianxun;
 
 -- 用户表
 create table if not exists user

@@ -1,53 +1,53 @@
 version: '3'
 services:
-  yuoj-backend-gateway:
-    container_name: yuoj-backend-gateway
+  qianxun-backend-gateway:
+    container_name: qianxun-backend-gateway
     build:
-      context: ./yuoj-backend-gateway
+      context: ./qianxun-backend-gateway
       dockerfile: Dockerfile
     ports:
       - "8101:8101"
     networks:
       - mynetwork
 
-  yuoj-backend-user-service:
-    container_name: yuoj-backend-user-service
+  qianxun-backend-user-service:
+    container_name: qianxun-backend-user-service
     build:
-      context: ./yuoj-backend-user-service
+      context: ./qianxun-backend-user-service
       dockerfile: Dockerfile
     ports:
       - "8102:8102"
     networks:
       - mynetwork
     depends_on:
-      - yuoj-backend-gateway
+      - qianxun-backend-gateway
 
-  yuoj-backend-question-service:
-    container_name: yuoj-backend-question-service
+  qianxun-backend-question-service:
+    container_name: qianxun-backend-question-service
     build:
-      context: ./yuoj-backend-question-service
+      context: ./qianxun-backend-question-service
       dockerfile: Dockerfile
     ports:
       - "8103:8103"
     networks:
       - mynetwork
     depends_on:
-      - yuoj-backend-user-service
-      - yuoj-backend-gateway
+      - qianxun-backend-user-service
+      - qianxun-backend-gateway
 
-  yuoj-backend-judge-service:
-    container_name: yuoj-backend-judge-service
+  qianxun-backend-judge-service:
+    container_name: qianxun-backend-judge-service
     build:
-      context: ./yuoj-backend-judge-service
+      context: ./qianxun-backend-judge-service
       dockerfile: Dockerfile
     ports:
       - "8104:8104"
     networks:
       - mynetwork
     depends_on:
-      - yuoj-backend-user-service
-      - yuoj-backend-question-service
-      - yuoj-backend-gateway
+      - qianxun-backend-user-service
+      - qianxun-backend-question-service
+      - qianxun-backend-gateway
 
 # 网络，不定义的话就是默认网络
 networks:
