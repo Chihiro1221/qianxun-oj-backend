@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.yupi.yuojbackendquestionservice.mapper.CommentMapper">
+
+    <resultMap id="BaseResultMap" type="com.yupi.yuojbackendmodel.model.entity.Comment">
+            <id property="id" column="id" />
+            <result property="content" column="content" />
+            <result property="commentableType" column="commentableType" />
+            <result property="upvoteCount" column="upvoteCount" />
+            <result property="downvoteCount" column="downvoteCount" />
+            <result property="userId" column="userId" />
+            <result property="commentableId" column="commentableId" />
+            <result property="targetId" column="targetId" />
+            <result property="replyUserId" column="replyUserId" />
+            <result property="createTime" column="createTime" />
+            <result property="updateTime" column="updateTime" />
+            <result property="isDelete" column="isDelete" />
+    </resultMap>
+
+    <sql id="Base_Column_List">
+        id,content,commentableType,upvoteCount,downvoteCount,userId,
+        commentableId,targetId,replyUserId,createTime,updateTime,
+        isDelete
+    </sql>
+</mapper>
