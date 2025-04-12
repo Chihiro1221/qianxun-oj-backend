@@ -1,5 +1,6 @@
 package com.qianxun.qianxunojbackendquestionservice.controller;
 
+import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.qianxun.qianxunojbackendcommon.annotation.AuthCheck;
 import com.qianxun.qianxunojbackendcommon.common.BaseResponse;
@@ -87,8 +88,13 @@ public class CommentController {
         if (!oldComment.getUserId().equals(user.getId()) && !userFeignClient.isAdmin(user)) {
             throw new BusinessException(ErrorCode.NO_AUTH_ERROR);
         }
-        boolean b = commentService.removeById(id);
-        return ResultUtils.success(b);
+        boolean res = commentService.removeById(id);
+        if (res) {
+            QueryWrapper<Comment> commentQueryWrapper = new QueryWrapper<>();
+            commentQueryWrapper.eq("commentableId", deleteRequest.getId());
+            commentService.remove(commentQueryWrapper);
+        }
+        return ResultUtils.success(res);
     }
 
     /**
