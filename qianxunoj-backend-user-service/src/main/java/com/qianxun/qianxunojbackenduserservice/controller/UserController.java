@@ -14,20 +14,22 @@ import com.qianxun.qianxunojbackendmodel.model.entity.User;
 import com.qianxun.qianxunojbackendmodel.model.vo.LoginUserVO;
 import com.qianxun.qianxunojbackendmodel.model.vo.UserVO;
 import com.qianxun.qianxunojbackenduserservice.service.UserService;
+import com.qianxun.qianxunojbackenduserservice.service.impl.UserServiceImpl;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.BeanUtils;
+import org.springframework.util.DigestUtils;
 import org.springframework.web.bind.annotation.*;
 
 import javax.annotation.Resource;
 import javax.servlet.http.HttpServletRequest;
 import java.util.List;
 
+import static com.qianxun.qianxunojbackenduserservice.service.impl.UserServiceImpl.SALT;
+import static org.bouncycastle.asn1.x500.style.RFC4519Style.userPassword;
+
 /**
  * 用户接口
- *
- *   
- *  
  */
 @RestController
 @RequestMapping("/")
@@ -158,8 +160,7 @@ public class UserController {
      */
     @PostMapping("/update")
     @AuthCheck(mustRole = UserConstant.ADMIN_ROLE)
-    public BaseResponse<Boolean> updateUser(@RequestBody UserUpdateRequest userUpdateRequest,
-            HttpServletRequest request) {
+    public BaseResponse<Boolean> updateUser(@RequestBody UserUpdateRequest userUpdateRequest, HttpServletRequest request) {
         if (userUpdateRequest == null || userUpdateRequest.getId() == null) {
             throw new BusinessException(ErrorCode.PARAMS_ERROR);
         }
@@ -211,12 +212,10 @@ public class UserController {
      */
     @PostMapping("/list/page")
     @AuthCheck(mustRole = UserConstant.ADMIN_ROLE)
-    public BaseResponse<Page<User>> listUserByPage(@RequestBody UserQueryRequest userQueryRequest,
-            HttpServletRequest request) {
+    public BaseResponse<Page<User>> listUserByPage(@RequestBody UserQueryRequest userQueryRequest, HttpServletRequest request) {
         long current = userQueryRequest.getCurrent();
         long size = userQueryRequest.getPageSize();
-        Page<User> userPage = userService.page(new Page<>(current, size),
-                userService.getQueryWrapper(userQueryRequest));
+        Page<User> userPage = userService.page(new Page<>(current, size), userService.getQueryWrapper(userQueryRequest));
         return ResultUtils.success(userPage);
     }
 
@@ -228,8 +227,7 @@ public class UserController {
      * @return
      */
     @PostMapping("/list/page/vo")
-    public BaseResponse<Page<UserVO>> listUserVOByPage(@RequestBody UserQueryRequest userQueryRequest,
-            HttpServletRequest request) {
+    public BaseResponse<Page<UserVO>> listUserVOByPage(@RequestBody UserQueryRequest userQueryRequest, HttpServletRequest request) {
         if (userQueryRequest == null) {
             throw new BusinessException(ErrorCode.PARAMS_ERROR);
         }
@@ -237,8 +235,7 @@ public class UserController {
         long size = userQueryRequest.getPageSize();
         // 限制爬虫
         ThrowUtils.throwIf(size > 20, ErrorCode.PARAMS_ERROR);
-        Page<User> userPage = userService.page(new Page<>(current, size),
-                userService.getQueryWrapper(userQueryRequest));
+        Page<User> userPage = userService.page(new Page<>(current, size), userService.getQueryWrapper(userQueryRequest));
         Page<UserVO> userVOPage = new Page<>(current, size, userPage.getTotal());
         List<UserVO> userVO = userService.getUserVO(userPage.getRecords());
         userVOPage.setRecords(userVO);
@@ -255,14 +252,28 @@ public class UserController {
      * @return
      */
     @PostMapping("/update/my")
-    public BaseResponse<Boolean> updateMyUser(@RequestBody UserUpdateMyRequest userUpdateMyRequest,
-            HttpServletRequest request) {
+    public BaseResponse<Boolean> updateMyUser(@RequestBody UserUpdateMyRequest userUpdateMyRequest, HttpServletRequest request) {
         if (userUpdateMyRequest == null) {
             throw new BusinessException(ErrorCode.PARAMS_ERROR);
         }
         User loginUser = userService.getLoginUser(request);
+        String userPassword = userUpdateMyRequest.getUserPassword();
+        String userNewPassword = userUpdateMyRequest.getUserNewPassword();
+        String userNewPasswordConfirmation = userUpdateMyRequest.getUserNewPasswordConfirmation();
         User user = new User();
         BeanUtils.copyProperties(userUpdateMyRequest, user);
+        if (userPassword != null && userNewPassword != null && userNewPasswordConfirmation != null) {
+            if (!userNewPassword.equals(userNewPasswordConfirmation)) {
+                throw new BusinessException(ErrorCode.PARAMS_ERROR, "两次密码输入不一致");
+            }
+
+            String encryptPassword = DigestUtils.md5DigestAsHex((SALT + userPassword).getBytes());
+            if (!loginUser.getUserPassword().equals(encryptPassword)) {
+                throw new BusinessException(ErrorCode.PARAMS_ERROR, "原密码不正确");
+            }
+            user.setUserPassword(DigestUtils.md5DigestAsHex((SALT + userNewPassword).getBytes()));
+        }
+
         user.setId(loginUser.getId());
         boolean result = userService.updateById(user);
         ThrowUtils.throwIf(!result, ErrorCode.OPERATION_ERROR);

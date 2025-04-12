@@ -17,6 +17,7 @@
         <module>qianxunoj-backend-user-service</module>
         <module>qianxunoj-backend-judge-service</module>
         <module>qianxunoj-backend-websocket-service</module>
+        <module>qianxunoj-backend-file</module>
     </modules>
     <properties>
         <java.version>1.8</java.version>

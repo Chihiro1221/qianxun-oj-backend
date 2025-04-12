@@ -24,6 +24,10 @@ spring:
             - Path=/api/ws/**
           metadata:
             protocol: websocket
+        - id: qianxun-backend-file-service
+          uri: lb://qianxun-backend-file-service
+          predicates:
+            - Path=/api/file/**
   application:
     name: qianxun-backend-gateway
   main:
