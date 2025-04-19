@@ -146,7 +146,7 @@ public class JudgeServiceImpl implements JudgeService {
             throw new BusinessException(ErrorCode.SYSTEM_ERROR);
         }
         JudgeStatus result = JSONUtil.toBean(responseStr, JudgeStatus.class);
-        if(result.getStatus() == null) {
+        if (result.getStatus() == null) {
 
         }
         JudgeStatusVO judgeStatusVO = JudgeStatusVO.objToVo(result);
@@ -184,7 +184,7 @@ public class JudgeServiceImpl implements JudgeService {
         String compile_output = "";
         String userStdout = "";
 
-        if(submitResult == null) {
+        if (submitResult == null) {
             status = JudgeInfoMessageEnum.COMPILE_ERROR.getText();
         }
         for (JudgeStatus judgeStatusItem : submitResult) {
@@ -208,19 +208,21 @@ public class JudgeServiceImpl implements JudgeService {
 
         // 只有当状态变化时才发送更新
         if (!currentStatus.equals(lastStatus)) {
-            judgeStatusVO.setStatus(currentStatus);
-            judgeStatusVO.setTime(maxTime.toString());
-            judgeStatusVO.setMemory(maxMemory.toString());
-            judgeStatusVO.setCompile_output(compile_output);
-            judgeStatusVO.setUser_stdout(userStdout);
-            wsMessageRequest.setMessage(JSONUtil.toJsonStr(judgeStatusVO));
-            websocketFeignClient.sendMessageById(wsMessageRequest);
-            userStatusMap.put(judgeStatus.getSid(), currentStatus);
+            if (!(currentStatus.equals("Pending") && lastStatus.equals("Running"))) {
+                judgeStatusVO.setStatus(currentStatus);
+                judgeStatusVO.setTime(maxTime.toString());
+                judgeStatusVO.setMemory(maxMemory.toString());
+                judgeStatusVO.setCompile_output(compile_output);
+                judgeStatusVO.setUser_stdout(userStdout);
+                wsMessageRequest.setMessage(JSONUtil.toJsonStr(judgeStatusVO));
+                websocketFeignClient.sendMessageById(wsMessageRequest);
+                userStatusMap.put(judgeStatus.getSid(), currentStatus);
+            }
         }
 
         // 如果状态不是最终状态，继续轮询
         if (JudgeInfoMessageEnum.isRunningOrProcessing(status)) {
-            scheduler.schedule(() -> updateJudgeStatus(judgeStatus), 500, TimeUnit.MILLISECONDS);
+            scheduler.schedule(() -> updateJudgeStatus(judgeStatus), 50, TimeUnit.MILLISECONDS);
             return;
         }
 
@@ -234,7 +236,7 @@ public class JudgeServiceImpl implements JudgeService {
         judgeInfo.setPass_num(passNum);
         judgeInfo.setTotal_case(submitResult.size());
         // 更新题目ac数量
-        if(judgeInfo.getMessage().equals(JudgeInfoMessageEnum.ACCEPTED.getText())) {
+        if (judgeInfo.getMessage().equals(JudgeInfoMessageEnum.ACCEPTED.getText())) {
             questionFeignClient.updateQuestionAcceptedNum(judgeStatus.getQuestionSubmitId());
         }
         questionSubmit.setJudgeInfo(JSONUtil.toJsonStr(judgeInfo));

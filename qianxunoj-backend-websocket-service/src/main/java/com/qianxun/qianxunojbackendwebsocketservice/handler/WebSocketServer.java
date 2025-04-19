@@ -1,6 +1,9 @@
 package com.qianxun.qianxunojbackendwebsocketservice.handler;
 
 import cn.hutool.json.JSONUtil;
+import com.alibaba.csp.sentinel.Entry;
+import com.alibaba.csp.sentinel.SphU;
+import com.alibaba.csp.sentinel.slots.block.BlockException;
 import com.qianxun.qianxunojbackendcommon.common.ErrorCode;
 import com.qianxun.qianxunojbackendcommon.exception.BusinessException;
 import com.qianxun.qianxunojbackendmodel.model.dto.questionsubmit.QuestionSubmitRequest;
@@ -90,13 +93,15 @@ public class WebSocketServer {
         RemoteEndpoint.Basic basicRemote = session.getBasicRemote();
         switch (req.getActivity()) {
             case "problem_run_code":
-                try {
+                try (Entry wsProblemRunCode = SphU.entry("ws_problem_run_code");) {
                     judgeStatusVO.setStatus(JudgeInfoMessageEnum.RUNNING.getText());
                     basicRemote.sendText(JSONUtil.toJsonStr(judgeStatusVO));
                     JudgeStatusVO res = judgeFeignClient.debug(req);
                     basicRemote.sendText(JSONUtil.toJsonStr(res));
                 } catch (IOException e) {
                     log.error("执行代码出错");
+                } catch (BlockException e) {
+                    throw new RuntimeException(e);
                 }
                 break;
             case "problem_submit_code":

@@ -1,5 +1,6 @@
 package com.qianxun.qianxunojbackendquestionservice.controller;
 
+import com.alibaba.csp.sentinel.annotation.SentinelResource;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.google.gson.Gson;
 import com.qianxun.qianxunojbackendcommon.annotation.AuthCheck;

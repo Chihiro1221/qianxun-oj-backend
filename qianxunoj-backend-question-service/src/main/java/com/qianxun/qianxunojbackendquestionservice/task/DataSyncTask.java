@@ -24,8 +24,8 @@ public class DataSyncTask {
     private SolutionService solutionService;
 
 
-    //@Scheduled(cron = "0 0 12 * * ?") // 每天中午12点同步
-    @Scheduled(cron = "0 * * * * ?")
+    @Scheduled(cron = "0 0 0 * * ?") // 每天0点同步
+    //@Scheduled(cron = "0 * * * * ?")
     public void syncLikesAndViewCounts() {
         log.info("定时任务启动");
         List<Solution> list = solutionService.list();

@@ -29,13 +29,13 @@ import java.util.Set;
 import java.util.stream.Collectors;
 
 /**
-* @author 李鱼皮
-* @description 针对表【question(题目)】的数据库操作Service实现
-* @createDate 2023-08-07 20:58:00
-*/
+ * @author 李鱼皮
+ * @description 针对表【question(题目)】的数据库操作Service实现
+ * @createDate 2023-08-07 20:58:00
+ */
 @Service
 public class QuestionServiceImpl extends ServiceImpl<QuestionMapper, Question>
-    implements QuestionService {
+        implements QuestionService {
 
 
     @Resource
@@ -43,6 +43,7 @@ public class QuestionServiceImpl extends ServiceImpl<QuestionMapper, Question>
 
     /**
      * 校验题目是否合法
+     *
      * @param question
      * @param add
      */
@@ -71,9 +72,9 @@ public class QuestionServiceImpl extends ServiceImpl<QuestionMapper, Question>
         if (difficulty < 1 || difficulty > 3) {
             throw new BusinessException(ErrorCode.PARAMS_ERROR, "题目难度参数错误");
         }
-        if (StringUtils.isNotBlank(judgeCase) && judgeCase.length() > 8192) {
-            throw new BusinessException(ErrorCode.PARAMS_ERROR, "判题用例过长");
-        }
+        //if (StringUtils.isNotBlank(judgeCase) && judgeCase.length() > 8192) {
+        //    throw new BusinessException(ErrorCode.PARAMS_ERROR, "判题用例过长");
+        //}
         if (StringUtils.isNotBlank(judgeConfig) && judgeConfig.length() > 8192) {
             throw new BusinessException(ErrorCode.PARAMS_ERROR, "判题配置过长");
         }
@@ -112,6 +113,8 @@ public class QuestionServiceImpl extends ServiceImpl<QuestionMapper, Question>
         queryWrapper.eq("isDelete", false);
         queryWrapper.orderBy(SqlUtils.validSortField(sortField), sortOrder.equals(CommonConstant.SORT_ORDER_ASC),
                 sortField);
+
+        queryWrapper.select("id", "title", "tags", "submitNum", "difficulty", "acceptedNum", "judgeConfig", "userId", "createTime");
         return queryWrapper;
     }
 

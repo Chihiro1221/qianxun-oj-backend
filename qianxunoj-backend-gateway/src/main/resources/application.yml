@@ -3,6 +3,11 @@ spring:
     nacos:
       discovery:
         server-addr: 127.0.0.1:8848
+    sentinel:
+      eager: true
+      transport:
+        dashboard: localhost:8090
+        port: 8719
     gateway:
       routes:
         - id: qianxun-backend-user-service
