@@ -12,8 +12,8 @@
     <name>qianxun-backend-gateway</name>
     <description>qianxun-backend-gateway</description>
     <properties>
-        <java.version>1.8</java.version>
-        <spring-cloud.version>2021.0.8</spring-cloud.version>
+        <java.version>17</java.version>
+        <spring-cloud.version>2023.0.1</spring-cloud.version>
     </properties>
     <dependencies>
         <!--sentinel-->
@@ -63,8 +63,8 @@
         </dependency>
         <dependency>
             <groupId>com.github.xiaoymin</groupId>
-            <artifactId>knife4j-gateway-spring-boot-starter</artifactId>
-            <version>4.3.0</version>
+            <artifactId>knife4j-openapi3-jakarta-spring-boot-starter</artifactId>
+            <version>4.4.0</version>
         </dependency>
         <dependency>
             <groupId>org.springframework.boot</groupId>

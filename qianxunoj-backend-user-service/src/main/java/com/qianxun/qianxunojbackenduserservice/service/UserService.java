@@ -8,7 +8,7 @@ import com.qianxun.qianxunojbackendmodel.model.entity.User;
 import com.qianxun.qianxunojbackendmodel.model.vo.LoginUserVO;
 import com.qianxun.qianxunojbackendmodel.model.vo.UserVO;
 
-import javax.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletRequest;
 import java.util.List;
 
 /**

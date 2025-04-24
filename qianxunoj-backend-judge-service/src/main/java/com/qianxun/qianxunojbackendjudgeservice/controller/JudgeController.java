@@ -9,7 +9,7 @@ import com.qianxun.qianxunojbackendmodel.model.vo.TokenVO;
 import com.qianxun.qianxunojbackendserviceclient.service.JudgeFeignClient;
 import org.springframework.web.bind.annotation.*;
 
-import javax.annotation.Resource;
+import jakarta.annotation.Resource;
 import java.util.List;
 
 @RestController

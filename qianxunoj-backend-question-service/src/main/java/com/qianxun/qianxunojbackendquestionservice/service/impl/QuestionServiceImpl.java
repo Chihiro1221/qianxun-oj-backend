@@ -8,6 +8,7 @@ import com.qianxun.qianxunojbackendcommon.constant.CommonConstant;
 import com.qianxun.qianxunojbackendcommon.exception.BusinessException;
 import com.qianxun.qianxunojbackendcommon.exception.ThrowUtils;
 import com.qianxun.qianxunojbackendcommon.utils.SqlUtils;
+import com.qianxun.qianxunojbackendmodel.model.dto.question.JudgeConfig;
 import com.qianxun.qianxunojbackendmodel.model.dto.question.QuestionQueryRequest;
 import com.qianxun.qianxunojbackendmodel.model.entity.Question;
 import com.qianxun.qianxunojbackendmodel.model.entity.User;
@@ -21,15 +22,16 @@ import org.apache.commons.lang3.ObjectUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.stereotype.Service;
 
-import javax.annotation.Resource;
-import javax.servlet.http.HttpServletRequest;
+import jakarta.annotation.Resource;
+import jakarta.servlet.http.HttpServletRequest;
+
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
 
 /**
- * @author 李鱼皮
+ * @author 浩楠
  * @description 针对表【question(题目)】的数据库操作Service实现
  * @createDate 2023-08-07 20:58:00
  */
@@ -158,6 +160,25 @@ public class QuestionServiceImpl extends ServiceImpl<QuestionMapper, Question>
         return questionVOPage;
     }
 
+    /**
+     * 构造题目上下文
+     *
+     * @param questionId
+     * @return
+     */
+    @Override
+    public String generateQuestionContext(Long questionId) {
+        Question question = this.getById(questionId);
+        QuestionVO questionVO = QuestionVO.objToVo(question);
+        JudgeConfig judgeConfig = questionVO.getJudgeConfig();
+        return String.format("""
+                题目标题：%s
+                题目内容：%s
+                时间限制：%s
+                空间限制：%s
+                测试用例：
+                %s""", questionVO.getTitle(), questionVO.getContent(), judgeConfig.getTimeLimit(), judgeConfig.getMemoryLimit(), question.getJudgeCase());
+    }
 
 }
 

@@ -1,6 +1,5 @@
 package com.qianxun.qianxunojbackendquestionservice.controller;
 
-import com.alibaba.csp.sentinel.annotation.SentinelResource;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.google.gson.Gson;
 import com.qianxun.qianxunojbackendcommon.annotation.AuthCheck;
@@ -11,6 +10,7 @@ import com.qianxun.qianxunojbackendcommon.common.ResultUtils;
 import com.qianxun.qianxunojbackendcommon.constant.UserConstant;
 import com.qianxun.qianxunojbackendcommon.exception.BusinessException;
 import com.qianxun.qianxunojbackendcommon.exception.ThrowUtils;
+import com.qianxun.qianxunojbackendmodel.model.dto.chat.ChatRequest;
 import com.qianxun.qianxunojbackendmodel.model.dto.question.*;
 import com.qianxun.qianxunojbackendmodel.model.dto.questionsubmit.QuestionSubmitQueryRequest;
 import com.qianxun.qianxunojbackendmodel.model.entity.Question;
@@ -21,13 +21,25 @@ import com.qianxun.qianxunojbackendmodel.model.vo.QuestionVO;
 import com.qianxun.qianxunojbackendquestionservice.service.QuestionService;
 import com.qianxun.qianxunojbackendquestionservice.service.QuestionSubmitService;
 import com.qianxun.qianxunojbackendserviceclient.service.UserFeignClient;
+import jakarta.annotation.Resource;
+import jakarta.servlet.http.HttpServletRequest;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.ai.chat.client.ChatClient;
+import org.springframework.ai.chat.client.advisor.SimpleLoggerAdvisor;
+import org.springframework.ai.chat.messages.SystemMessage;
+import org.springframework.ai.chat.messages.UserMessage;
+import org.springframework.ai.chat.prompt.Prompt;
 import org.springframework.beans.BeanUtils;
+import org.springframework.http.MediaType;
 import org.springframework.web.bind.annotation.*;
+import reactor.core.publisher.Flux;
 
-import javax.annotation.Resource;
-import javax.servlet.http.HttpServletRequest;
+import java.time.Duration;
 import java.util.List;
+import java.util.Objects;
+
+import static org.springframework.ai.chat.client.advisor.AbstractChatMemoryAdvisor.CHAT_MEMORY_CONVERSATION_ID_KEY;
+import static org.springframework.ai.chat.client.advisor.AbstractChatMemoryAdvisor.CHAT_MEMORY_RETRIEVE_SIZE_KEY;
 
 /**
  * 题目接口
@@ -45,6 +57,9 @@ public class QuestionController {
 
     @Resource
     private QuestionSubmitService questionSubmitService;
+    @Resource
+    private ChatClient chatClient;
+
 
     private final static Gson GSON = new Gson();
 
@@ -157,7 +172,7 @@ public class QuestionController {
      * @return
      */
     @GetMapping("/get")
-    public BaseResponse<Question> getQuestionById(long id, HttpServletRequest request) {
+    public BaseResponse<Question> getQuestionById(@RequestParam("id") long id, HttpServletRequest request) {
         if (id <= 0) {
             throw new BusinessException(ErrorCode.PARAMS_ERROR);
         }
@@ -180,7 +195,7 @@ public class QuestionController {
      * @return
      */
     @GetMapping("/get/vo")
-    public BaseResponse<QuestionVO> getQuestionVOById(long id, HttpServletRequest request) {
+    public BaseResponse<QuestionVO> getQuestionVOById(@RequestParam("id") long id, HttpServletRequest request) {
         if (id <= 0) {
             throw new BusinessException(ErrorCode.PARAMS_ERROR);
         }
@@ -357,5 +372,27 @@ public class QuestionController {
         return ResultUtils.success(questionSubmitVO);
     }
 
+    @PostMapping(value = "/chat/stream", produces = MediaType.TEXT_EVENT_STREAM_VALUE)
+    public Flux<String> stream(@RequestBody ChatRequest chatRequest, HttpServletRequest request) {
+        User loginUser = userFeignClient.getLoginUser(request);
+        String conversantId = String.format("$s:$s", loginUser.getId(), chatRequest.getQuestionId());
+        return chatClient.prompt()
+                .system(s -> s.param("question_info", questionService.generateQuestionContext(chatRequest.getQuestionId())))
+                .user(chatRequest.getMessage())
+                .advisors(spec -> spec.param(CHAT_MEMORY_CONVERSATION_ID_KEY, conversantId)
+                        .param(CHAT_MEMORY_RETRIEVE_SIZE_KEY, 100))
+                .stream()
+                .content()
+                .filter(Objects::nonNull)
+                .map(content -> content
+                        .replace("\n", "\\n")
+                        .replace("\r", "\\r")
+                        .replace(" ", "  ")
+                )
+                .onErrorResume(e -> Flux.just(
+                        "event: error\ndata: " + e.getMessage() + "\n\n",
+                        "event: close\ndata: \n\n"
+                ));
+    }
 
 }

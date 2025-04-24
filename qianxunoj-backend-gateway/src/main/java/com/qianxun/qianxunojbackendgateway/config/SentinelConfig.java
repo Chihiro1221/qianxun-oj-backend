@@ -6,6 +6,7 @@ import com.alibaba.csp.sentinel.adapter.spring.webflux.callback.WebFluxCallbackM
 import com.alibaba.csp.sentinel.slots.block.BlockException;
 import com.qianxun.qianxunojbackendcommon.common.ErrorCode;
 import com.qianxun.qianxunojbackendcommon.common.ResultUtils;
+import jakarta.annotation.PostConstruct;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.http.HttpStatus;
@@ -14,7 +15,6 @@ import org.springframework.web.reactive.function.BodyInserters;
 import org.springframework.web.reactive.function.server.ServerResponse;
 import reactor.core.publisher.Mono;
 
-import javax.annotation.PostConstruct;
 import javax.xml.transform.Result;
 
 @Configuration

@@ -25,8 +25,8 @@ import org.springframework.beans.BeanUtils;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.web.bind.annotation.*;
 
-import javax.annotation.Resource;
-import javax.servlet.http.HttpServletRequest;
+import jakarta.annotation.Resource;
+import jakarta.servlet.http.HttpServletRequest;
 
 /**
  * 题解接口
@@ -110,7 +110,7 @@ public class SolutionController {
      * @return
      */
     @GetMapping("/get/vo")
-    public BaseResponse<SolutionVO> getSolutionVOById(long id, HttpServletRequest request) {
+    public BaseResponse<SolutionVO> getSolutionVOById(@RequestParam("id") long id, HttpServletRequest request) {
         if (id <= 0) {
             throw new BusinessException(ErrorCode.PARAMS_ERROR);
         }

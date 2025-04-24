@@ -2,6 +2,7 @@ package com.qianxun.qianxunojbackendquestionservice.controller.inner;
 
 import com.qianxun.qianxunojbackendcommon.common.ErrorCode;
 import com.qianxun.qianxunojbackendcommon.exception.BusinessException;
+import com.qianxun.qianxunojbackendmodel.model.dto.chat.ChatRequest;
 import com.qianxun.qianxunojbackendmodel.model.dto.questionsubmit.QuestionSubmitRequest;
 import com.qianxun.qianxunojbackendmodel.model.entity.Question;
 import com.qianxun.qianxunojbackendmodel.model.entity.QuestionSubmit;
@@ -12,7 +13,9 @@ import com.qianxun.qianxunojbackendserviceclient.service.QuestionFeignClient;
 import com.qianxun.qianxunojbackendserviceclient.service.UserFeignClient;
 import org.springframework.web.bind.annotation.*;
 
-import javax.annotation.Resource;
+import jakarta.annotation.Resource;
+import reactor.core.publisher.Flux;
+
 import java.util.List;
 
 /**
@@ -59,6 +62,11 @@ public class QuestionInnerController implements QuestionFeignClient {
     @Override
     public void updateQuestionAcceptedNum(Long questionSubmitId) {
         questionSubmitService.updateQuestionAcceptedNum(questionSubmitId);
+    }
+
+    @Override
+    public Flux<String> stream(ChatRequest chatRequest) {
+        return null;
     }
 
 }

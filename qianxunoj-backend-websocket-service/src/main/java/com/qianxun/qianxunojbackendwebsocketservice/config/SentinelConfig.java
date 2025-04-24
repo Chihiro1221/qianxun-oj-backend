@@ -3,8 +3,8 @@ package com.qianxun.qianxunojbackendwebsocketservice.config;
 import com.alibaba.csp.sentinel.slots.block.RuleConstant;
 import com.alibaba.csp.sentinel.slots.block.flow.FlowRule;
 import com.alibaba.csp.sentinel.slots.block.flow.FlowRuleManager;
+import jakarta.annotation.PostConstruct;
 import org.springframework.context.annotation.Configuration;
-import javax.annotation.PostConstruct;
 import java.util.Collections;
 
 @Configuration

@@ -13,13 +13,13 @@ import com.qianxun.qianxunojbackendmodel.model.vo.JudgeStatusVO;
 import com.qianxun.qianxunojbackendserviceclient.service.JudgeFeignClient;
 import com.qianxun.qianxunojbackendserviceclient.service.QuestionFeignClient;
 import com.qianxun.qianxunojbackendserviceclient.service.UserFeignClient;
+import jakarta.websocket.*;
+import jakarta.websocket.server.PathParam;
+import jakarta.websocket.server.ServerEndpoint;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
 
-import javax.annotation.Resource;
-import javax.websocket.*;
-import javax.websocket.server.PathParam;
-import javax.websocket.server.ServerEndpoint;
+import jakarta.annotation.Resource;
 import java.io.IOException;
 import java.util.HashMap;
 import java.util.concurrent.ConcurrentHashMap;

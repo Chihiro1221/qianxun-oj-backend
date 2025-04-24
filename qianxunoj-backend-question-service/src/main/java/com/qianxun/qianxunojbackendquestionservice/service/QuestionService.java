@@ -7,10 +7,10 @@ import com.qianxun.qianxunojbackendmodel.model.dto.question.QuestionQueryRequest
 import com.qianxun.qianxunojbackendmodel.model.entity.Question;
 import com.qianxun.qianxunojbackendmodel.model.vo.QuestionVO;
 
-import javax.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletRequest;
 
 /**
-* @author 李鱼皮
+* @author 浩楠
 * @description 针对表【question(题目)】的数据库操作Service
 * @createDate 2023-08-07 20:58:00
 */
@@ -50,5 +50,6 @@ public interface QuestionService extends IService<Question> {
      * @return
      */
     Page<QuestionVO> getQuestionVOPage(Page<Question> questionPage, HttpServletRequest request);
-    
+
+    String generateQuestionContext(Long questionId);
 }

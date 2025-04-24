@@ -7,7 +7,7 @@ import com.qianxun.qianxunojbackendmodel.model.dto.comment.CommentQueryRequest;
 import com.qianxun.qianxunojbackendmodel.model.entity.Comment;
 import com.qianxun.qianxunojbackendmodel.model.vo.CommentVO;
 
-import javax.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletRequest;
 
 /**
  * @author heart

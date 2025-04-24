@@ -39,7 +39,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.filter.RequestContextFilter;
 
-import javax.annotation.Resource;
+import jakarta.annotation.Resource;
 import java.time.Instant;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -47,7 +47,7 @@ import java.util.List;
 import java.util.stream.Collectors;
 
 /**
- * @author 李鱼皮
+ * @author 浩楠
  * @description 针对表【question_submit(题目提交)】的数据库操作Service实现
  * @createDate 2023-08-07 20:58:53
  */

@@ -1,6 +1,7 @@
 package com.qianxun.qianxunojbackendserviceclient.service;
 
 
+import com.qianxun.qianxunojbackendmodel.model.dto.chat.ChatRequest;
 import com.qianxun.qianxunojbackendmodel.model.dto.questionsubmit.QuestionSubmitRequest;
 import com.qianxun.qianxunojbackendmodel.model.entity.Question;
 import com.qianxun.qianxunojbackendmodel.model.entity.QuestionSubmit;
@@ -9,9 +10,10 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestParam;
+import reactor.core.publisher.Flux;
 
 /**
- * @author 李鱼皮
+ * @author 浩楠
  * @description 针对表【question(题目)】的数据库操作Service
  * @createDate 2023-08-07 20:58:00
  */
@@ -42,4 +44,13 @@ public interface QuestionFeignClient {
      */
     @PostMapping("/question_submit/question/update")
     void updateQuestionAcceptedNum(@RequestBody Long questionSubmitId);
+
+    /**
+     * 聊天
+     *
+     * @param chatRequest
+     * @return
+     */
+    @PostMapping("/chat/stream")
+    Flux<String> stream(@RequestBody ChatRequest chatRequest);
 }
