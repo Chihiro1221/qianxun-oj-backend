@@ -10,8 +10,10 @@ import com.qianxun.qianxunojbackendcommon.exception.BusinessException;
 import com.qianxun.qianxunojbackendcommon.exception.ThrowUtils;
 import com.qianxun.qianxunojbackendcommon.utils.SqlUtils;
 import com.qianxun.qianxunojbackendmodel.model.dto.solution.SolutionQueryRequest;
+import com.qianxun.qianxunojbackendmodel.model.entity.Question;
 import com.qianxun.qianxunojbackendmodel.model.entity.Solution;
 import com.qianxun.qianxunojbackendmodel.model.entity.User;
+import com.qianxun.qianxunojbackendmodel.model.vo.QuestionVO;
 import com.qianxun.qianxunojbackendmodel.model.vo.SolutionVO;
 import com.qianxun.qianxunojbackendquestionservice.mapper.SolutionMapper;
 import com.qianxun.qianxunojbackendquestionservice.service.SolutionService;
@@ -19,13 +21,14 @@ import com.qianxun.qianxunojbackendserviceclient.service.UserFeignClient;
 import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.lang3.ObjectUtils;
 import org.apache.commons.lang3.StringUtils;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.redis.core.RedisTemplate;
+import org.springframework.data.redis.core.ZSetOperations;
 import org.springframework.stereotype.Service;
 
 import jakarta.annotation.Resource;
 import jakarta.servlet.http.HttpServletRequest;
 
+import java.util.Date;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -204,7 +207,7 @@ public class SolutionServiceImpl extends ServiceImpl<SolutionMapper, Solution>
      */
     @Override
     public Boolean addFavorite(SolutionQueryRequest solutionQueryRequest, User loginUser) {
-        double score = System.currentTimeMillis(); // 使用时间戳作为分数（排序用）
+        long score = System.currentTimeMillis(); // 使用时间戳作为分数（排序用）
         Boolean isAdded = redisTemplate.opsForZSet().add(RedisConstant.USER_FAVORITE_SOLUTION + loginUser.getId(), solutionQueryRequest.getId().toString(), score);
         if (!isAdded) {
             throw new BusinessException(ErrorCode.PARAMS_ERROR);
@@ -212,6 +215,36 @@ public class SolutionServiceImpl extends ServiceImpl<SolutionMapper, Solution>
         redisTemplate.opsForValue().increment(RedisConstant.SOLUTION_FAVORITE_COUNT + solutionQueryRequest.getId());
 
         return true;
+    }
+
+    /**
+     * 获取用户所有收藏
+     *
+     * @param solutionQueryRequest
+     * @param loginUser
+     * @return
+     */
+    @Override
+    public List<SolutionVO> getCurrentFavorites(SolutionQueryRequest solutionQueryRequest, User loginUser) {
+        long current = solutionQueryRequest.getCurrent();
+        long pageSize = solutionQueryRequest.getPageSize();
+        long start = (current - 1) * pageSize;
+        long end = current * pageSize - 1;
+        Set<ZSetOperations.TypedTuple<String>> res = redisTemplate.opsForZSet().reverseRangeWithScores(RedisConstant.USER_FAVORITE_SOLUTION + loginUser.getId(), start, end);
+        List<SolutionVO> solutionList = res.stream().map(item -> {
+            Solution solution = this.getById(item.getValue());
+            SolutionVO solutionVO = SolutionVO.objToVo(solution);
+            QueryWrapper<Question> questionQueryWrapper = new QueryWrapper<>();
+            questionQueryWrapper.select("title");
+            questionQueryWrapper.eq("id", solutionVO.getQuestionId());
+            Question question = questionService.getOne(questionQueryWrapper);
+            solutionVO.setQuestionVO(QuestionVO.objToVo(question));
+            // 暂时用收藏时间替换创建时间
+
+            solutionVO.setCreateTime(new Date(item.getScore().longValue()));
+            return solutionVO;
+        }).collect(Collectors.toList());
+        return solutionList;
     }
 
     /**

@@ -204,6 +204,33 @@ public class SolutionController {
         return ResultUtils.success(solutionVOPage);
     }
 
+    /**
+     * 分页获取当前用户创建的资源列表
+     *
+     * @param solutionQueryRequest
+     * @param request
+     * @return
+     */
+    @PostMapping("/list/favorite/page/vo")
+    public BaseResponse<Page<SolutionVO>> listFavoriteSolutionVOByPage(@RequestBody SolutionQueryRequest solutionQueryRequest, HttpServletRequest request) {
+        if (solutionQueryRequest == null) {
+            throw new BusinessException(ErrorCode.PARAMS_ERROR);
+        }
+        User loginUser = userFeignClient.getLoginUser(request);
+        solutionQueryRequest.setUserId(loginUser.getId());
+        long current = solutionQueryRequest.getCurrent();
+        long size = solutionQueryRequest.getPageSize();
+        // 限制爬虫
+        ThrowUtils.throwIf(size > 20, ErrorCode.PARAMS_ERROR);
+
+        List<SolutionVO> currentFavorites = solutionService.getCurrentFavorites(solutionQueryRequest, loginUser);
+        Long total = redisTemplate.opsForZSet().zCard(RedisConstant.USER_FAVORITE_SOLUTION + loginUser.getId());
+        Page<SolutionVO> solutionVOPage = new Page<>(current, size, total);
+        solutionVOPage.setRecords(currentFavorites);
+
+        return ResultUtils.success(solutionVOPage);
+    }
+
     // endregion
 
     /**

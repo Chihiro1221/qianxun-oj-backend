@@ -10,6 +10,8 @@ import com.qianxun.qianxunojbackendmodel.model.vo.SolutionVO;
 
 import jakarta.servlet.http.HttpServletRequest;
 
+import java.util.List;
+
 /**
 * @author heart
 * @description 针对表【solution(题解)】的数据库操作Service
@@ -65,6 +67,8 @@ public interface SolutionService extends IService<Solution> {
     Boolean isLiked(Long solutionId, User loginUser);
 
     Boolean addFavorite(SolutionQueryRequest solutionQueryRequest, User loginUser);
+
+    List<SolutionVO> getCurrentFavorites(SolutionQueryRequest solutionQueryRequest, User loginUser);
 
     Boolean unFavorite(SolutionQueryRequest solutionQueryRequest, User loginUser);
 
