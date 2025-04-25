@@ -10,6 +10,7 @@ import java.util.Date;
 
 /**
  * 题解
+ *
  * @TableName solution
  */
 @Data
@@ -59,6 +60,11 @@ public class SolutionVO implements Serializable {
      */
     private UserVO userVO;
 
+    /**
+     * 题目信息
+     */
+
+    private QuestionVO questionVO;
     /**
      * 题目 id
      */

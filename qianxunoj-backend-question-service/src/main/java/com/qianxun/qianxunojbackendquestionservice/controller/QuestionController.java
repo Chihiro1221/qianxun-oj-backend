@@ -374,8 +374,8 @@ public class QuestionController {
 
     @PostMapping(value = "/chat/stream", produces = MediaType.TEXT_EVENT_STREAM_VALUE)
     public Flux<String> stream(@RequestBody ChatRequest chatRequest, HttpServletRequest request) {
-        User loginUser = userFeignClient.getLoginUser(request);
-        String conversantId = String.format("$s:$s", loginUser.getId(), chatRequest.getQuestionId());
+        //User loginUser = userFeignClient.getLoginUser(request);
+        String conversantId = String.format("$s:$s", chatRequest.getUserId(), chatRequest.getQuestionId());
         return chatClient.prompt()
                 .system(s -> s.param("question_info", questionService.generateQuestionContext(chatRequest.getQuestionId())))
                 .user(chatRequest.getMessage())

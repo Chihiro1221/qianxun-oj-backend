@@ -19,11 +19,13 @@ import com.qianxun.qianxunojbackendserviceclient.service.UserFeignClient;
 import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.lang3.ObjectUtils;
 import org.apache.commons.lang3.StringUtils;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.stereotype.Service;
 
 import jakarta.annotation.Resource;
 import jakarta.servlet.http.HttpServletRequest;
+
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -43,6 +45,8 @@ public class SolutionServiceImpl extends ServiceImpl<SolutionMapper, Solution>
 
     @Resource
     private RedisTemplate<String, String> redisTemplate;
+    @Resource
+    private QuestionServiceImpl questionService;
 
     /**
      * 校验题目是否合法
@@ -68,9 +72,6 @@ public class SolutionServiceImpl extends ServiceImpl<SolutionMapper, Solution>
         if (StringUtils.isNotBlank(content) && content.length() > 8192) {
             throw new BusinessException(ErrorCode.PARAMS_ERROR, "内容过长");
         }
-        if (solution.getQuestionId() == null) {
-            throw new BusinessException(ErrorCode.PARAMS_ERROR, "题目id不能为空");
-        }
     }
 
     @Override
@@ -82,7 +83,6 @@ public class SolutionServiceImpl extends ServiceImpl<SolutionMapper, Solution>
         Long id = solutionQueryRequest.getId();
         String title = solutionQueryRequest.getTitle();
         String content = solutionQueryRequest.getContent();
-        Long solutionId = solutionQueryRequest.getQuestionId();
         Long userId = solutionQueryRequest.getUserId();
         Long questionId = solutionQueryRequest.getQuestionId();
         String sortField = solutionQueryRequest.getSortField();
@@ -94,7 +94,6 @@ public class SolutionServiceImpl extends ServiceImpl<SolutionMapper, Solution>
         queryWrapper.eq(ObjectUtils.isNotEmpty(id), "id", id);
         queryWrapper.eq(ObjectUtils.isNotEmpty(userId), "userId", userId);
         queryWrapper.eq(ObjectUtils.isNotEmpty(questionId), "questionId", questionId);
-        queryWrapper.eq(ObjectUtils.isNotEmpty(userId), "solutionId", solutionId);
         queryWrapper.eq("isDelete", false);
         queryWrapper.orderBy(SqlUtils.validSortField(sortField), sortOrder.equals(CommonConstant.SORT_ORDER_ASC),
                 sortField);
@@ -114,6 +113,7 @@ public class SolutionServiceImpl extends ServiceImpl<SolutionMapper, Solution>
                 .collect(Collectors.groupingBy(User::getId));
         // 填充信息
         List<SolutionVO> solutionVOList = solutionList.stream().map(solution -> {
+
             String viewCount = redisTemplate.opsForValue().get(RedisConstant.SOLUTION_VIEW_COUNT + solution.getId());
             String likeCount = redisTemplate.opsForValue().get(RedisConstant.SOLUTION_LIKE_COUNT + solution.getId());
             String favoriteCount = redisTemplate.opsForValue().get(RedisConstant.SOLUTION_FAVORITE_COUNT + solution.getId());
