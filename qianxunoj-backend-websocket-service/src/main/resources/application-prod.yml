@@ -8,12 +8,6 @@ spring:
     url: jdbc:mysql://mysql:3306/qianxun
     username: root
     password: youzhi..
-  # Redis 配置
-  redis:
-    database: 1
-    host: redis
-    port: 6379
-    timeout: 5000
   cloud:
     nacos:
       discovery:
@@ -23,3 +17,9 @@ spring:
     port: 5672
     password: guest
     username: guest
+  data:
+    redis:
+      database: 1
+      host: 117.72.56.37
+      port: 6379
+      timeout: 5000

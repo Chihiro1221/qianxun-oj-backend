@@ -1,11 +1,14 @@
 package com.qianxun.qianxunojbackendjudgeservice.judge;
 
+import cn.hutool.core.bean.BeanUtil;
+import cn.hutool.core.codec.Base64;
 import cn.hutool.core.util.StrUtil;
 import cn.hutool.http.HttpException;
 import cn.hutool.http.HttpUtil;
 import cn.hutool.json.JSONUtil;
 import com.qianxun.qianxunojbackendcommon.common.ErrorCode;
 import com.qianxun.qianxunojbackendcommon.exception.BusinessException;
+import com.qianxun.qianxunojbackendcommon.utils.Base64Utils;
 import com.qianxun.qianxunojbackendjudgeservice.judge.codesandbox.CodeSandbox;
 import com.qianxun.qianxunojbackendjudgeservice.judge.codesandbox.CodeSandboxFactory;
 import com.qianxun.qianxunojbackendjudgeservice.judge.codesandbox.CodeSandboxProxy;
@@ -27,12 +30,15 @@ import com.qianxun.qianxunojbackendmodel.model.vo.JudgeStatusVO;
 import com.qianxun.qianxunojbackendmodel.model.vo.TokenVO;
 import com.qianxun.qianxunojbackendserviceclient.service.QuestionFeignClient;
 import com.qianxun.qianxunojbackendserviceclient.service.WebsocketFeignClient;
+import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
 import jakarta.annotation.Resource;
+
 import java.util.List;
+import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
@@ -134,28 +140,36 @@ public class JudgeServiceImpl implements JudgeService {
             questionSubmitRequest.setStdin(judgeCase.getInput());
         }
 
-        String url = remoteUrl + "submissions?wait=true";
-        String json = JSONUtil.toJsonStr(questionSubmitRequest);
+        String url = remoteUrl + "submissions?wait=true&base64_encoded=true";
+        Map<String, Object> beanMap = Base64Utils.translateBase64Map(questionSubmitRequest);
+
+        String json = JSONUtil.toJsonStr(beanMap);
         String responseStr = null;
         try {
             responseStr = HttpUtil.createPost(url)
                     .body(json)
+                    .timeout(10000)
                     .execute()
                     .body();
-        } catch (HttpException e) {
-            throw new BusinessException(ErrorCode.SYSTEM_ERROR);
+        } catch (Exception e) {
+            JudgeStatusVO judgeStatusVO = new JudgeStatusVO();
+            judgeStatusVO.setStatus(JudgeInfoMessageEnum.SYSTEM_ERROR.getText());
+            return judgeStatusVO;
         }
         JudgeStatus result = JSONUtil.toBean(responseStr, JudgeStatus.class);
-        if (result.getStatus() == null) {
 
-        }
         JudgeStatusVO judgeStatusVO = JudgeStatusVO.objToVo(result);
+        // 进行base64解码
+        judgeStatusVO.setStdout(Base64.decodeStr(judgeStatusVO.getStdout()));
+        judgeStatusVO.setCompile_output(Base64.decodeStr(judgeStatusVO.getCompile_output()));
+
         if (JudgeInfoMessageEnum.ACCEPTED.getValue().equals(judgeStatusVO.getStatus()))
             judgeStatusVO.setStatus(JudgeInfoMessageEnum.FINISHED.getText());
         if (StrUtil.isEmpty(questionSubmitRequest.getStdin())) judgeStatusVO.setStdin(judgeCase.getInput());
         else judgeStatusVO.setStdin(questionSubmitRequest.getStdin());
         return judgeStatusVO;
     }
+
 
     @Override
     public String getJudgeResult(List<TokenVO> tokenVOList) {
@@ -167,7 +181,7 @@ public class JudgeServiceImpl implements JudgeService {
 
     @Override
     public void updateJudgeStatus(JudgeStatusRequest judgeStatus) {
-        String url = remoteUrl + "/submissions/batch?tokens=";
+        String url = remoteUrl + "/submissions/batch?base64_encoded=true&tokens=";
         for (TokenVO tokenVO : judgeStatus.getTokenVOList()) {
             url += tokenVO.getToken() + ",";
         }
@@ -192,6 +206,8 @@ public class JudgeServiceImpl implements JudgeService {
             if (!status.equals("Accepted")) {
                 compile_output = judgeStatusItem.getCompile_output();
                 userStdout = judgeStatusItem.getStdout();
+                maxTime = 0F;
+                maxMemory = 0F;
                 break;
             }
             ++passNum;
@@ -212,8 +228,8 @@ public class JudgeServiceImpl implements JudgeService {
                 judgeStatusVO.setStatus(currentStatus);
                 judgeStatusVO.setTime(maxTime.toString());
                 judgeStatusVO.setMemory(maxMemory.toString());
-                judgeStatusVO.setCompile_output(compile_output);
-                judgeStatusVO.setUser_stdout(userStdout);
+                judgeStatusVO.setCompile_output(Base64.decodeStr(compile_output));
+                judgeStatusVO.setUser_stdout(Base64.decodeStr(userStdout));
                 wsMessageRequest.setMessage(JSONUtil.toJsonStr(judgeStatusVO));
                 websocketFeignClient.sendMessageById(wsMessageRequest);
                 userStatusMap.put(judgeStatus.getSid(), currentStatus);
@@ -222,7 +238,7 @@ public class JudgeServiceImpl implements JudgeService {
 
         // 如果状态不是最终状态，继续轮询
         if (JudgeInfoMessageEnum.isRunningOrProcessing(status)) {
-            scheduler.schedule(() -> updateJudgeStatus(judgeStatus), 50, TimeUnit.MILLISECONDS);
+            scheduler.schedule(() -> updateJudgeStatus(judgeStatus), 500, TimeUnit.MILLISECONDS);
             return;
         }
 

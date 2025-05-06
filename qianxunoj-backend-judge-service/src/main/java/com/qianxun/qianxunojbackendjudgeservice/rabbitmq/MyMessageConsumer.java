@@ -26,11 +26,12 @@ public class MyMessageConsumer {
     public void receiveMessage(String message, Channel channel, @Header(AmqpHeaders.DELIVERY_TAG) long deliveryTag) {
         log.info("receiveMessage message = {}", message);
         JudgeStatusRequest judgeStatus = JSONUtil.toBean(message, JudgeStatusRequest.class);
-        //long questionSubmitId = Long.parseLong(message);
         try {
             judgeService.updateJudgeStatus(judgeStatus);
             channel.basicAck(deliveryTag, false);
         } catch (Exception e) {
+            log.error("消息队列执行异常：");
+            e.printStackTrace();
             channel.basicNack(deliveryTag, false, false);
         }
     }

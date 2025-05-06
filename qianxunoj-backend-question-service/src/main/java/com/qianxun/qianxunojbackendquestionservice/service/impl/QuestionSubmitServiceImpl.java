@@ -1,5 +1,6 @@
 package com.qianxun.qianxunojbackendquestionservice.service.impl;
 
+import cn.hutool.core.codec.Base64;
 import cn.hutool.http.HttpUtil;
 import cn.hutool.json.JSONUtil;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
@@ -40,6 +41,7 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.filter.RequestContextFilter;
 
 import jakarta.annotation.Resource;
+
 import java.time.Instant;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -114,7 +116,7 @@ public class QuestionSubmitServiceImpl extends ServiceImpl<QuestionSubmitMapper,
         }
         // 更新提交数量
         Boolean updated = this.incrementSubmitNum(questionId);
-        if(!updated) {
+        if (!updated) {
             throw new BusinessException(ErrorCode.SYSTEM_ERROR, "数据更新失败");
         }
         // 是否已提交题目
@@ -144,23 +146,16 @@ public class QuestionSubmitServiceImpl extends ServiceImpl<QuestionSubmitMapper,
         judgeCaseList.forEach((JudgeCase caseItem) -> {
             QuestionSubmitRequest submitRequest = new QuestionSubmitRequest();
             submitRequest.setLanguage_id(languageEnum.getId());
-            submitRequest.setSource_code(questionSubmitRequest.getSource_code());
-            submitRequest.setStdin(caseItem.getInput());
-            submitRequest.setExpected_output(caseItem.getOutput());
+            submitRequest.setSource_code(Base64.encode(questionSubmitRequest.getSource_code()));
+            submitRequest.setStdin(Base64.encode(caseItem.getInput()));
+            submitRequest.setExpected_output(Base64.encode(caseItem.getOutput()));
             submitRequest.setCpu_time_limit(Float.valueOf(Instant.ofEpochMilli(judgeConfig.getTimeLimit()).getEpochSecond()));
             submitRequest.setMemory_limit(Float.valueOf(judgeConfig.getMemoryLimit()));
             submitRequest.setStack_limit(judgeConfig.getStackLimit());
             map.get("submissions").add(submitRequest);
         });
-        String url = remoteUrl + "submissions/batch";
+        String url = remoteUrl + "submissions/batch?base64_encoded=true";
         String json = JSONUtil.toJsonStr(map);
-        // 更新执行状态
-        //WsMessageRequest wsMessageRequest = new WsMessageRequest();
-        //JudgeStatusVO judgeStatusVO = new JudgeStatusVO();
-        //judgeStatusVO.setStatus(JudgeInfoMessageEnum.RUNNING.getValue());
-        //wsMessageRequest.setSid(questionSubmitRequest.getSid());
-        //wsMessageRequest.setMessage(JSONUtil.toJsonStr(judgeStatusVO));
-        //websocketFeignClient.sendMessageById(wsMessageRequest);
         // 执行
         String responseStr = HttpUtil.createPost(url)
                 .body(json)
@@ -171,13 +166,8 @@ public class QuestionSubmitServiceImpl extends ServiceImpl<QuestionSubmitMapper,
         judgeStatusRequest.setTokenVOList(list);
         judgeStatusRequest.setQuestionSubmitId(questionSubmitId);
         judgeStatusRequest.setSid(questionSubmitRequest.getSid());
-        System.out.println("submissions" + map);
         // 发送消息
         myMessageProducer.sendMessage("code_exchange", "my_routingKey", JSONUtil.toJsonStr(judgeStatusRequest));
-        // 执行判题服务
-//        CompletableFuture.runAsync(() -> {
-//            judgeFeignClient.doJudge(questionSubmitId);
-//        });
         return list;
     }
 
@@ -240,6 +230,7 @@ public class QuestionSubmitServiceImpl extends ServiceImpl<QuestionSubmitMapper,
 
     /**
      * 更新题目ac数量
+     *
      * @param questionSubmitId
      */
     @Override
