@@ -148,10 +148,11 @@ public class JudgeServiceImpl implements JudgeService {
         try {
             responseStr = HttpUtil.createPost(url)
                     .body(json)
-                    .timeout(10000)
+                    .timeout(30000)
                     .execute()
                     .body();
         } catch (Exception e) {
+            e.printStackTrace();
             JudgeStatusVO judgeStatusVO = new JudgeStatusVO();
             judgeStatusVO.setStatus(JudgeInfoMessageEnum.SYSTEM_ERROR.getText());
             return judgeStatusVO;
